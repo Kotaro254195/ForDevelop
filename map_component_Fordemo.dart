@@ -22,6 +22,8 @@ class _MapComponent extends State<MapComponent>{
   int selectedId;
   int old_SelectedId;
 
+  List<Shop> shops;
+
   _MapComponent(LatLng latlng){this.latLag=latlng;}
 
   Completer<GoogleMapController> _controller = Completer();
@@ -40,7 +42,7 @@ class _MapComponent extends State<MapComponent>{
       });*/
 
     final appModel = Provider.of<AppModel>(context);
-    List<Shop> shops=[
+    shops=[
       new Shop(name: "a",evaluation: 5,telephone: "00000000000",latLng: LatLng(37.525790, 140.389847),congestion: 90),
       new Shop(name: "b",evaluation: 4,telephone: "11111111111",latLng: LatLng(37.525479, 140.388699),congestion: 70),
       new Shop(name: "c",evaluation: 3,telephone: "22222222222",latLng: LatLng(37.525062, 140.391156),congestion: 20),
@@ -73,6 +75,7 @@ class _MapComponent extends State<MapComponent>{
                               onTap: (){setState(() {
                                 selectedId=i;
                                 old_SelectedId=selectedId;
+                                // selectedId=null;
                                 print(selectedId);
                                 print("hello");
                               });},
@@ -92,7 +95,82 @@ class _MapComponent extends State<MapComponent>{
                 )
             );
           }),
-      if(selectedId!=null)Popup(shops: shops,selectedId: selectedId)
+      if(selectedId!=null)popup()
     ]);
+  }
+
+  Widget popup() {
+    // return UpperPop(List<Shop> shops) {
+    final TextStyle textStyle = TextStyle(fontSize: 20);
+    final TextStyle textButtonStyle =
+    TextStyle(fontSize: 20, color: Colors.blue);
+    final Size displaySize = MediaQuery.of(context).size;
+
+    //数値の評価→星マークに変換 ex.)evaluation:3→"★★★☆☆"
+    String toStar(num evaluation) {
+      String str = "";
+      for (int i = 0; i < 5; i++) {
+        if (i < evaluation)
+          str += "★";
+        else
+          str += "☆";
+      }
+      return str;
+    }
+
+    //混雑度をメッセージを含むTextに変換
+    Text describeNum(num congestion) {
+      String message;
+      if (congestion < 40)
+        return Text("空いています",
+            style: TextStyle(
+                color: Colors.blue, fontSize: displaySize.width / 11));
+      else if (congestion < 80)
+        return Text("すこし混雑しています",
+            style: TextStyle(
+                color: Colors.yellow,
+                backgroundColor: Colors.grey,
+                fontSize: displaySize.width / 11));
+      else
+        return Text("混んでいます",
+            style:
+            TextStyle(color: Colors.red, fontSize: displaySize.width / 11));
+    }
+
+    return Dismissible(
+        key: Key(shops[selectedId].name),
+        direction: DismissDirection.down,
+        // onDismissed: selectedId=null,
+        child: Container(
+            height: displaySize.height / 3,
+            width: displaySize.width,
+            color: Colors.white.withOpacity(0.8),
+            margin: EdgeInsets.only(top: displaySize.height / 1.6),
+            child: Center(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                      child: Column(
+                        children: <Widget>[
+                          Text(
+                            selectedId == null
+                                ? shops[0].name
+                                : shops[selectedId].name,
+                            style: TextStyle(fontSize: displaySize.width / 8),
+                          ),
+                          Text(selectedId == null
+                              ? shops[0].name
+                              : "評価:" + toStar(shops[selectedId].evaluation)),
+                          Text(selectedId == null
+                              ? shops[0].name
+                              : "電話番号:" + shops[selectedId].telephone),
+                          if (selectedId != null)
+                            describeNum(shops[selectedId].congestion),
+                        ],
+                      )),
+                ],
+              ),
+            )));
   }
 }
